@@ -1,0 +1,13 @@
+Question Number,Type,Time,Correct
+1,kebab-case,3185.100000000093,Yes
+2,kebab-case,2378.7000000001863,No
+3,kebab-case,3093.2999999998137,Yes
+4,kebab-case,3473.600000000093,Yes
+5,camelCase,2082.899999999907,Yes
+6,kebab-case,1750,No
+7,kebab-case,3112.600000000093,Yes
+8,camelCase,3120.399999999907,Yes
+9,camelCase,1694.5999999996275,Yes
+10,camelCase,1932.7000000001863,Yes
+11,camelCase,3149.5,Yes
+12,camelCase,2253.399999999907,Yes

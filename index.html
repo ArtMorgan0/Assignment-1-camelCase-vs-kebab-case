@@ -1,0 +1,421 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="author" content="Arthur Morgan">
+    <title>Questionnaire App</title>
+    <style>
+      body {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
+
+      #pagination {
+          position: fixed;
+          bottom: 0;
+          width: 100%;
+          background-color: #f0f0f0;
+          padding: 20px;
+          box-sizing: border-box;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+      }
+  </style>
+</head>
+<body>
+  <h1>Experimentation & Evaluation - Assignment 2</h1>
+    <div id="content">
+        <!-- CONTENT -->
+    </div>
+    <div id="pagination">
+        <button id="prevButton">Previous</button>
+        <span id="currentPage">Page 1</span>
+        <button id="nextButton">Next</button>
+    </div>
+    <script>
+      class Question {
+
+        constructor(title, solution, options, type) {
+          this.title = title
+          this.solution = solution;
+          this.options = options;
+          this.input = null;
+          this.time = 0;
+
+          // 0:camel of 1:kebab
+          this.type = type;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+      
+        // Initialize current page
+        let user = null;
+        let currentPage = 1;
+        const totalPages = 15;
+        let questions = [];
+        let ofType0 = 0;
+        let ofType1 = 0;
+
+        let startTime = 0;
+        
+
+        const firstHalfWords = [
+          ["Bird", "Bind"],
+          ["Care", "Case"],
+          ["Desk", "Dusk"],
+          ["Fish", "Fist"],
+          ["Golf", "Gulf"],
+          ["Lime", "Line"],
+          ["Moon", "Mood"],
+          ["Park", "Part"],
+          ["Rain", "Raid"],
+          ["Soar", "Soul"],
+          ["Tack", "Task"],
+          ["User", "Used"],
+          ["Vote", "Void"],
+          ["Wine", "Wise"],
+          ["Zero", "Zone"]
+        ];
+
+        const secondHalfWords = [
+          ["Blur", "Burn"],
+          ["Cloud", "Club"],
+          ["Drip", "Drop"],
+          ["Flame", "Flea"],
+          ["Grin", "Grip"],
+          ["Hike", "Hive"],
+          ["Jolt", "Jazz"],
+          ["Keen", "Kind"],
+          ["Loop", "Leap"],
+          ["Muse", "Maze"],
+          ["Nose", "Node"],
+          ["Open", "Otter"],
+          ["Pave", "Pose"],
+          ["Quad", "Quay"],
+          ["Rose", "Rave"]
+        ];
+
+
+        const contentDiv = document.getElementById("content");
+
+            // introduction paragraph
+            const introductionParagraph = document.createElement("p");
+            introductionParagraph.innerHTML = `<span style="font-size: 22px;">
+                Studies performed in natural language reading show that people read better (i.e., 20% faster) when an explicit
+                separator is used between words. It does not matter the type of separator, it could be a white space or a special
+                symbol. The overall message is that readingthistext is more difficult than reading_this_text or reading this text.
+                Here comes our question: Is this finding valid for source code as well? In other words, can we speed up code
+                reading using a specific separator when writing composed identifiers (i.e., identifiers featuring more than one
+                word)? This experiment aims to answer this very question.
+                <br><br>
+                Following a brief questionnaire about the user, you'll have ${totalPages-3} multiple choice questions, your goal is to
+                find the given pair of words as quickly as possible.
+                <br><br>
+                Participants will be timed for each question, and timing stops when they move to the next question. At the end,
+                they can see their results, and by pressing "Download CSV," a .csv file of their results will be created.<span>
+            `;
+
+            contentDiv.innerHTML = "";
+            contentDiv.appendChild(introductionParagraph);
+
+        function dataCollection() {
+            const contentDiv = document.getElementById("content");
+            const questionnaireForm = document.createElement("form");
+
+            // Question 1: Age
+            const ageLabel = document.createElement("label");
+            ageLabel.textContent = "Age:";
+            const ageSelect = document.createElement("select");
+            ageSelect.name = "age";
+            const ageOptions = ["Under 18", "18-24", "25-34", "35-44", "45-54", "55-64", "65 or older"];
+            ageOptions.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                ageSelect.appendChild(optionElement);
+            });
+            ageLabel.appendChild(ageSelect);
+
+            // Question 2: Gender
+            const genderLabel = document.createElement("label");
+            genderLabel.textContent = "Gender:";
+            const genderSelect = document.createElement("select");
+            genderSelect.name = "gender";
+            const genderOptions = ["Male", "Female", "Other"];
+            genderOptions.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                genderSelect.appendChild(optionElement);
+            });
+            genderLabel.appendChild(genderSelect);
+
+            // Question 3: Level of English
+            const englishLabel = document.createElement("label");
+            englishLabel.textContent = "Level of English:";
+            const englishSelect = document.createElement("select");
+            englishSelect.name = "englishLevel";
+            const englishOptions = ["A1", "A2", "B1", "B2", "C1", "C2", "Native"];
+            englishOptions.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.textContent = option;
+                englishSelect.appendChild(optionElement);
+            });
+            englishLabel.appendChild(englishSelect);
+
+            // Add form elements to the form
+            questionnaireForm.appendChild(ageLabel);
+            questionnaireForm.appendChild(document.createElement("br"));
+            questionnaireForm.appendChild(genderLabel);
+            questionnaireForm.appendChild(document.createElement("br"));
+            questionnaireForm.appendChild(englishLabel);
+
+            contentDiv.innerHTML = "";
+            contentDiv.appendChild(questionnaireForm);
+        }
+
+        function saveData() {
+            const age = document.querySelector('select[name="age"]').value;
+            const gender = document.querySelector('select[name="gender"]').value;
+            const englishLevel = document.querySelector('select[name="englishLevel"]').value;
+
+            // Store user data as a string in the user variable
+            user = {
+                age: age,
+                gender: gender,
+                englishLevel: englishLevel
+            };
+        }
+
+        function downloadCSV() {
+            // Add header row
+            let csvContent = "Question Number,Type,Time,Correct\n";
+
+            // Add data rows
+            questions.forEach((question, index) => {
+                csvContent += `${index + 1},${question.type == 0 ? "camelCase" : "kebab-case"},${question.time},${question.solution == question.input ? "Yes" : "No"}\n`;
+            });
+
+
+            // Create Blob and download link
+            const blob = new Blob([csvContent], { type: "text/csv" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `${user.age}_${user.gender}_${user.englishLevel}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function submit() {
+            const contentDiv = document.getElementById("content");
+            const table = document.createElement("table");
+            table.border = "1";
+
+            // Create the table header
+            const headerRow = table.insertRow(0);
+            const questionNumberHeader = headerRow.insertCell(0);
+            const timeHeader = headerRow.insertCell(1);
+            const correctHeader = headerRow.insertCell(2);
+            questionNumberHeader.innerHTML = "<b>Question Number</b>";
+            timeHeader.innerHTML = "<b>Time (in milliseconds) </b>";
+            correctHeader.innerHTML = "<b>Correct</b>"
+
+            for (let i = 0; i < totalPages-3; i++) {
+                const question = questions[i];
+
+                // question
+                const row = table.insertRow(i + 1);
+
+                // question number and time
+                const questionNumberCell = row.insertCell(0);
+                const timeCell = row.insertCell(1);
+                const correctCell = row.insertCell(2);
+
+                questionNumberCell.innerHTML = i + 1;
+                timeCell.innerHTML = question.time;
+                correctCell.innerHTML = question.input == question.solution ? "Yes" : "No";
+            }
+
+            contentDiv.innerHTML = "";
+            contentDiv.appendChild(table);
+            contentDiv.innerHTML += `<button id="downloadCSV">Download CSV</button>`;
+            document.getElementById("downloadCSV").addEventListener("click", downloadCSV);
+            document.getElementById("pagination").innerHTML = `<button>Previous</button><span id="currentPage">Page ${totalPages}</span><button>Next</button>`;
+        }
+
+
+        function link(type, word1, word2) {
+          linked = "";
+          if (type == 0) {
+            linked = word1.toLowerCase() + word2;
+          } else {
+            linked = word1.toLowerCase() + "-" + word2.toLowerCase();
+          }
+          return linked;
+        }
+        
+
+        function generateQuestion() {
+          if (questions.length + 4 > currentPage) {
+
+            // select pairs of words
+            firstWords = firstHalfWords[Math.floor(Math.random() * 15)];
+            secondWords = secondHalfWords[Math.floor(Math.random() * 15)];
+
+            if (ofType0 == (totalPages-3)/2) {
+              type = 1;
+            } else if (ofType1 == (totalPages-3)/2) {
+              type = 0
+            } else {
+              type = Math.round(Math.random());
+              if (type == 0) {
+                ofType0++;
+              } else {
+                ofType1++;
+              }
+            }
+
+            solution = Math.floor(Math.random() * 4);
+
+            options = [];
+            title = "";
+
+
+            // create options
+            a = Math.round(Math.random());
+            b = Math.round(Math.random());
+
+            options.push(link(type, firstWords[1-a], secondWords[1-b]));
+            options.push(link(type, firstWords[1-a], secondWords[b]));
+            options.push(link(type, firstWords[a], secondWords[1-b]));
+            options.push(link(type, firstWords[a], secondWords[b]));
+
+            // pick solution
+            solution = Math.floor(Math.random() * 4);
+
+            switch(solution) {  
+              case 0: title = firstWords[1-a] + " " + secondWords[1-b]; break;
+              case 1: title = firstWords[1-a] + " " + secondWords[b]; break;
+              case 2: title = firstWords[a] + " " + secondWords[1-b]; break;
+              case 3: title = firstWords[a] + " " + secondWords[b]; break;
+            }
+
+            questions.push(new Question(title, solution, options, type));
+
+            startTime = performance.now();
+          }          
+
+          const li = document.createElement("li");
+
+          const h2 = document.createElement("h2");
+          h2.textContent = questions[currentPage-3].title;
+
+          const choicesUl = document.createElement("ul");
+          choicesUl.className = "choices";
+
+          for (i = 0; i < questions[currentPage-3].options.length; i++) {
+            const optionLi = document.createElement("li");
+
+            const label = document.createElement("label");
+            const input = document.createElement("input");
+            input.type = "radio";
+            input.name = "option";
+
+            const span = document.createElement("span");
+            span.textContent = questions[currentPage-3].options[i];
+            span.style.fontSize = "22px";
+
+            label.appendChild(input);
+            label.appendChild(span);
+            optionLi.appendChild(label);
+            choicesUl.appendChild(optionLi);
+          }
+          
+
+
+          li.appendChild(h2);
+          li.appendChild(choicesUl);
+
+          document.getElementById("content").innerHTML = "";
+          document.getElementById("content").appendChild(li);
+
+          var radioInputs = document.getElementsByName('option');
+
+          if (questions[currentPage-3].input !== null) {
+            radioInputs[questions[currentPage-3].input].checked = true;
+          }
+          
+        }
+
+        function saveAnswer() {
+          var radioInputs = document.getElementsByName('option');
+
+          for (var i = 0; i < radioInputs.length; i++) {
+            
+          this.type = null;
+                if (radioInputs[i].checked) {
+                    questions[currentPage - 3].input = i;
+                }
+            }
+        }
+
+
+        // Function to update the displayed page number
+        function updatePageNumber() {
+          document.getElementById("currentPage").textContent = "Page " + currentPage;
+          if (currentPage == 1) {
+            introduction();
+          } else if (currentPage == 2) {
+            dataCollection();
+          } else if (currentPage == totalPages) {
+            submit();
+          } else {
+            generateQuestion();
+          }
+        }
+
+        // Function to handle previous button click
+        function handlePrevButtonClick() {
+          if (currentPage > 1) {
+            if (currentPage > 2 && currentPage < totalPages) {
+              questions[currentPage-3].time += performance.now() - startTime;
+            } else if (currentPage == 2) {
+              saveData();
+            }
+            saveAnswer();
+            currentPage--;
+            updatePageNumber();
+          }
+        }
+
+        // Function to handle next button click
+        function handleNextButtonClick() {
+          if (currentPage < totalPages) {
+            if (currentPage > 2 && currentPage < totalPages) {
+              questions[currentPage-3].time += performance.now() - startTime;
+            } else if (currentPage == 2) {
+              saveData();
+            }
+            saveAnswer();
+            currentPage++;
+            updatePageNumber();
+          }
+        }
+
+        // Attach event listeners to the buttons
+        document.getElementById("prevButton").addEventListener("click", handlePrevButtonClick);
+        document.getElementById("nextButton").addEventListener("click", handleNextButtonClick);
+
+        // Initial page number update
+        updatePageNumber();
+      });
+    </script>
+</body>
+</html>
